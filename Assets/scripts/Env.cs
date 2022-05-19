@@ -6,12 +6,16 @@ public class Env : MonoBehaviour
 {
     public float cameraOffset = 40f;
     public float cameraHeight;
+    public float cameraBottom;
     public float cameraWidth;
     public float screenAspect;
     public float rotationScaler; 
-
+    public float throwForce = 26f; 
+    
     void Start(){
         cameraHeight = Camera.main.orthographicSize * 4;
+
+        cameraBottom = -2f * cameraHeight;
 
         screenAspect = (float)Screen.width / (float)Screen.height;
 
