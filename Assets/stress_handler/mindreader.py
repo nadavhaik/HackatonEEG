@@ -25,10 +25,14 @@ def get_sample(inlet):
     return sample
 
 
-def calc_attention(sample):
-    return -10000
+def  get_electroid_arrays(sample_matrix):
+    return [[],[],[],[],[]]
 
+def calc_attention_ratio(electroid_arrays):
+    return 0
 
+def generate_attention_score(attention_ratios):
+    return 0
 
 def main():
     mac_address = "00:55:da:b3:d2:69"
@@ -40,17 +44,16 @@ def main():
     for i in range(256):
         sample_matrix.append(get_sample(inlet))
 
+    # list of 5 arrays based on coloum
+    electroid_arrays = get_electroid_arrays(sample_matrix)
 
-    np_matrix = np.array(sample_matrix)
-    # goal is to get np_matrix and get clean beta and theta
-    # fft raw
-    # butter/filter noisey waves
-    # do fft again
-    # calc power of relevant frequency ranges
-    # fft_matrix = np.fft.fft(np_matrix)
+    # for each electroid calculate attention ratio (beta/theta)
+    attention_ratios = []
+    for i in range(len(electroid_arrays)):
+        attention_ratios.append(calc_attention_ratio(electroid_arrays[i]))
 
-    # print(np_matrix)
-    # print(fft_matrix)
+    # geneate attention score that will be sent through api
+    attention_score = generate_attention_score(attention_ratios)
     inlet.close_stream()
 
 
