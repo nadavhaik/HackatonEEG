@@ -1,0 +1,9 @@
+
+/Library/
+/Logs/
+/Packages/
+/ProjectSettings/
+/Temp/
+/UserSetting/
+*.meta
+*.pyc
