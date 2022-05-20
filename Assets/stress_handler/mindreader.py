@@ -15,7 +15,7 @@ def connect_muse(mac_address):
     if mac_address in muses_macs:
         t = Process(target=stream, args=(mac_address.upper(),))
         t.start()
-        time.sleep(10)
+        time.sleep(1)
         streams = resolve_stream('type', 'EEG')
         # create a new inlet to read from the stream
         return StreamInlet(streams[0])
