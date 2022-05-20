@@ -6,7 +6,8 @@ from muselsl import stream, record, record_direct, list_muses
 import numpy as np
 from data_server import Runner
 from brain_data import *
-
+from scipy import signal
+import scipy
 
 
 def connect_muse(mac_address):
@@ -37,8 +38,22 @@ def get_electroid_arrays(sample_matrix):
         l.append(subl)
     return l
 
+
 def calc_attention_ratio(electroid_arrays):
-    return 0
+    attention_ratio = []
+    for i in range(5):
+        attention_ratio.append(electroid_arrays[i])
+    return attention_ratio
+
+
+def calc_attention_ratio_array(sample_array):
+    np_matrix = np.array(sample_array)
+    sos = signal.butter(1, 40, 'hp', fs=256, output='sos')
+    filtered = signal.sosfilt(sos, np_matrix)
+    theta = bandpower(filtered, 256, 4, 7)
+    beta = bandpower(filtered, 256, 12, 30)
+    return beta / max(theta,0.0000001)
+
 
 def generate_attention_score(attention_ratios):
     return 0
