@@ -4,6 +4,9 @@ from pylsl import StreamInlet, resolve_stream
 from multiprocessing import Process
 from muselsl import stream, record, record_direct, list_muses
 import numpy as np
+from data_server import Runner
+from brain_data import *
+
 
 
 def connect_muse(mac_address):
@@ -41,6 +44,7 @@ def generate_attention_score(attention_ratios):
     return 0
 
 def main():
+    Runner().run()
     mac_address = "00:55:da:b3:d2:69"
     inlet = connect_muse(mac_address)
     # we'll get 256 samples per second
