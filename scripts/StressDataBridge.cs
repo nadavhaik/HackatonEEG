@@ -127,37 +127,37 @@ public class StressData
     
     double last_stress_level;
     float last_time_updated_stress_level;
-    // public double getStressLevel(){
-    //     last_stress_level = stress_level;
-    //     if (changed){ // every second update the stress level
-
-    //         markChanged();
-    //         last_time_updated_stress_level = Time.realtimeSinceStartup;
-    //         last_stress_level = stress_level;
-    //         if (stressGauge == null)
-    //             return 0.0;
-    //         else
-    //             stress_level = (double)stressGauge;
-    //     }
-    //     double delta = Time.realtimeSinceStartup - last_time_updated_stress_level; // is between [0,1]
-    //     return (stress_level - last_stress_level) * delta + last_stress_level;
-    // }
-
-
-
-
-
     public double getStressLevel(){
-        if (changed){
+        last_stress_level = stress_level;
+        if (changed){ // every second update the stress level
+
             markChanged();
             last_time_updated_stress_level = Time.realtimeSinceStartup;
-            Debug.Log("get stress level using dummy block, fix code at stressDataBridge");
-            stress_level = 0.0;
+            last_stress_level = stress_level;
+            if (stressGauge == null)
+                return 0.0;
+            else
+                stress_level = (double)stressGauge;
         }
         double delta = Time.realtimeSinceStartup - last_time_updated_stress_level; // is between [0,1]
-        Debug.Log("delta: " + delta);
-        return (GameObject.Find("global_env").GetComponent<Env>().max_stress_level) * (delta * 2.0);
-
+        return (stress_level - last_stress_level) * delta + last_stress_level;
     }
+
+
+
+
+
+    // public double getStressLevel(){
+    //     if (changed){
+    //         markChanged();
+    //         last_time_updated_stress_level = Time.realtimeSinceStartup;
+    //         Debug.Log("get stress level using dummy block, fix code at stressDataBridge");
+    //         stress_level = 0.0;
+    //     }
+    //     double delta = Time.realtimeSinceStartup - last_time_updated_stress_level; // is between [0,1]
+    //     Debug.Log("delta: " + delta);
+    //     return (GameObject.Find("global_env").GetComponent<Env>().max_stress_level) * (delta * 2.0);
+
+    // }
 
 }       

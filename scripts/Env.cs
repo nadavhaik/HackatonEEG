@@ -21,8 +21,9 @@ public class Env : MonoBehaviour
         screenAspect = (float)Screen.width / (float)Screen.height;
 
         cameraWidth = cameraHeight * screenAspect;
-
     }
+
+    
 
     
 }
