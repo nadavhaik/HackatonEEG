@@ -2,7 +2,7 @@ import time
 
 from pylsl import StreamInlet, resolve_stream
 from multiprocessing import Process
-from muselsl import stream, record, record_direct, list_muses
+from pylsl import *
 import numpy as np
 from data_server import Runner
 from brain_data import *
@@ -15,16 +15,18 @@ def disconnect_all_muses():
         StreamInlet(s).close_stream()
 
 def connect_muse(mac_address):
-    # disconnect_all_muses()
-    muses = list_muses()
-    muses_macs = map(lambda x: x["address"].lower(), muses)
-    if mac_address in muses_macs:
-        t = Process(target=stream, args=(mac_address.upper(),))
-        t.start()
-        time.sleep(1)
-        streams = resolve_stream('type', 'EEG')
-        # create a new inlet to read from the stream
+    streams = resolve_stream('type', 'EEG')
+    if len(streams) > 0:
         return StreamInlet(streams[0])
+    # # muses = list_muses()
+    # muses_macs = map(lambda x: x["address"].lower(), muses)
+    # if mac_address in muses_macs:
+    #     t = Process(target=stream, args=(mac_address.upper(),))
+    #     t.start()
+    #     time.sleep(1)
+    #     streams = resolve_stream('type', 'EEG')
+    #     # create a new inlet to read from the stream
+    #     return StreamInlet(streams[0])
     else:
         raise Exception("Requested Muse device is not connected")
 
@@ -36,7 +38,7 @@ def get_sample(inlet):
 
 def get_electroid_arrays(sample_matrix):
     l = []
-    for i in range(5):
+    for i in range(4):
         subl = []
         for m in sample_matrix:
             subl.append(m[i])
@@ -46,8 +48,8 @@ def get_electroid_arrays(sample_matrix):
 
 def calc_attention_ratio(electroid_arrays):
     attention_ratio = []
-    for i in range(5):
-        attention_ratio.append(electroid_arrays[i])
+    for arr in electroid_arrays:
+        attention_ratio.append(calc_attention_ratio_array(arr))
     return attention_ratio
 
 
@@ -77,20 +79,29 @@ def main():
     inlet = connect_muse(mac_address)
     # we'll get 256 samples per second
 
-    sample_matrix = []
-    # create matrix of 256 samples representing a second
-    for i in range(256):
-        sample_matrix.append(get_sample(inlet))
-
-    # list of 5 arrays based on coloum
-    electroid_arrays = get_electroid_arrays(sample_matrix)
-
+    start_time = datetime.now()
     # for each electroid calculate attention ratio (beta/theta)
-    attention_ratios = []
-    for i in range(len(electroid_arrays)):
-        attention_ratios.append(calc_attention_ratio(electroid_arrays[i]))
-    with open("output.txt", "a") as file:
-        file.write(f"\n{attention_ratios}")
+    try:
+        while (datetime.now() - start_time).seconds < 120:
+            print("sampling")
+            sample_matrix = []
+            # create matrix of 256 samples representing a second
+            for i in range(256):
+                sample_matrix.append(get_sample(inlet))
+
+            # list of 5 arrays based on coloum
+            electroid_arrays = get_electroid_arrays(sample_matrix)
+
+
+            attention_ratios = []
+            for i in range(len(electroid_arrays)):
+                attention_ratios.append(calc_attention_ratio(electroid_arrays))
+            print(attention_ratios)
+            with open("output.txt", "a") as file:
+                file.write(f"\n{attention_ratios}")
+
+    except:
+        pass
 
     # geneate attention score that will be sent through api
     attention_score = generate_attention_score(attention_ratios)
