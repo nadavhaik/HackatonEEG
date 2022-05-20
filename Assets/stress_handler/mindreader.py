@@ -68,9 +68,9 @@ def calc_attention_ratio_array(sample_array):
     beta = bandpower(filtered, 256, 12, 30)
     return beta / max(theta,0.0000001)
 
-
+# side electords 0.1, main electrods 0.4
 def generate_attention_score(attention_ratios):
-    return 0
+    return attention_ratios[0]*0.1+attention_ratios[1]*0.4+attention_ratios[2]*0.4+attention_ratios[3]*0.1
 
 def main():
     #Runner().run()
@@ -80,6 +80,8 @@ def main():
     # we'll get 256 samples per second
 
     start_time = datetime.now()
+    # calculate focused_ratio and not focused_ratio
+
     # for each electroid calculate attention ratio (beta/theta)
     try:
         while (datetime.now() - start_time).seconds < 120:
@@ -91,8 +93,6 @@ def main():
 
             # list of 5 arrays based on coloum
             electroid_arrays = get_electroid_arrays(sample_matrix)
-
-
             attention_ratios = []
             for i in range(len(electroid_arrays)):
                 attention_ratios.append(calc_attention_ratio(electroid_arrays))
