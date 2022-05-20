@@ -88,11 +88,10 @@ def main():
         while True:
             sample_matrix = []
             attention_score = 0.5
-            #data needed for sampling
-            # both values have been calculated
             if focused_ratio<0 or not_focused_ratio<0:
+                # gathering data for sampling
                 sample_matrix.append(get_sample(inlet))
-                # process focused
+                # calulcate focused
                 if (datetime.now()-start_time).seconds<10 and focused_ratio<0:
                     electroid_arrays = get_electroid_arrays(sample_matrix)
                     attention_ratios = []
@@ -100,7 +99,7 @@ def main():
                         attention_ratios.append(calc_attention_ratio(electroid_arrays))
                     focused_ratio = generate_attention_ratio(attention_ratios)
                     print("focused ratio is"+ focused_ratio)
-                # process unfocused
+                # calculate unfocused
                 elif (datetime.now()-start_time).seconds<20:
                     electroid_arrays = get_electroid_arrays(sample_matrix)
                     attention_ratios = []
