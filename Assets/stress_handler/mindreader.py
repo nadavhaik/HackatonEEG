@@ -9,14 +9,19 @@ from brain_data import *
 from scipy import signal
 import scipy
 
+def disconnect_all_muses():
+    streams = resolve_stream('type', 'EEG')
+    for s in streams:
+        StreamInlet(s).close_stream()
 
 def connect_muse(mac_address):
+    # disconnect_all_muses()
     muses = list_muses()
     muses_macs = map(lambda x: x["address"].lower(), muses)
     if mac_address in muses_macs:
         t = Process(target=stream, args=(mac_address.upper(),))
         t.start()
-        time.sleep(10)
+        time.sleep(1)
         streams = resolve_stream('type', 'EEG')
         # create a new inlet to read from the stream
         return StreamInlet(streams[0])
@@ -67,7 +72,8 @@ def generate_attention_score(attention_ratios):
 
 def main():
     #Runner().run()
-    mac_address = "00:55:da:b3:d2:69"
+    #mac_address = "00:55:da:b3:d2:69"
+    mac_address = "00:55:DA:B9:49:FF".lower()
     inlet = connect_muse(mac_address)
     # we'll get 256 samples per second
 
