@@ -16,7 +16,7 @@ def connect_muse(mac_address):
     if mac_address in muses_macs:
         t = Process(target=stream, args=(mac_address.upper(),))
         t.start()
-        time.sleep(1)
+        time.sleep(10)
         streams = resolve_stream('type', 'EEG')
         # create a new inlet to read from the stream
         return StreamInlet(streams[0])
@@ -66,7 +66,7 @@ def generate_attention_score(attention_ratios):
     return 0
 
 def main():
-    Runner().run()
+    #Runner().run()
     mac_address = "00:55:da:b3:d2:69"
     inlet = connect_muse(mac_address)
     # we'll get 256 samples per second
@@ -83,10 +83,13 @@ def main():
     attention_ratios = []
     for i in range(len(electroid_arrays)):
         attention_ratios.append(calc_attention_ratio(electroid_arrays[i]))
+    with open("output.txt", "a") as file:
+        file.write(f"\n{attention_ratios}")
 
     # geneate attention score that will be sent through api
     attention_score = generate_attention_score(attention_ratios)
     inlet.close_stream()
+    Runner().kill_server()
 
 
 if __name__ == '__main__':
