@@ -69,42 +69,73 @@ def calc_attention_ratio_array(sample_array):
     return beta / max(theta,0.0000001)
 
 
-def generate_attention_score(attention_ratios):
-    return 0
+def generate_attention_ratio(attention_ratios):
+    return attention_ratios[0]*0.1+attention_ratios[1]*.4+attention_ratios[2]*0.4+attention_ratios[3]*0.1
+
+
 
 def main():
-    #Runner().run()
+    Runner().run()
     #mac_address = "00:55:da:b3:d2:69"
     mac_address = "00:55:DA:B9:49:FF".lower()
     inlet = connect_muse(mac_address)
     # we'll get 256 samples per second
-
+    focused_ratio = -1000
+    not_focused_ratio = -1000
     start_time = datetime.now()
-    # for each electroid calculate attention ratio (beta/theta)
+
     try:
-        while (datetime.now() - start_time).seconds < 120:
-            print("sampling")
+        while True:
             sample_matrix = []
-            # create matrix of 256 samples representing a second
-            for i in range(256):
+            attention_score = 0.5
+            #data needed for sampling
+            # both values have been calculated
+            if focused_ratio<0 or not_focused_ratio<0:
                 sample_matrix.append(get_sample(inlet))
+                # process focused
+                if (datetime.now()-start_time).seconds<10 and focused_ratio<0:
+                    electroid_arrays = get_electroid_arrays(sample_matrix)
+                    attention_ratios = []
+                    for i in range(len(electroid_arrays)):
+                        attention_ratios.append(calc_attention_ratio(electroid_arrays))
+                    focused_ratio = generate_attention_ratio(attention_ratios)
+                    print("focused ratio is"+ focused_ratio)
+                # process unfocused
+                elif (datetime.now()-start_time).seconds<20:
+                    electroid_arrays = get_electroid_arrays(sample_matrix)
+                    attention_ratios = []
+                    for i in range(len(electroid_arrays)):
+                        attention_ratios.append(calc_attention_ratio(electroid_arrays))
+                    not_focused_ratio = generate_attention_ratio(attention_ratios)
+                    print("not focused ratio is" + focused_ratio)
+            # focused/unfocused calculated
+            else:
+                # gather samples for 1 second
+                gather_time = datetime.now()
+                while (datetime.now() - gather_time).seconds < 1:
+                    sample_matrix.append(get_sample(inlet))
+                    electroid_arrays = get_electroid_arrays(sample_matrix)
+                    attention_ratios = []
+                    for i in range(len(electroid_arrays)):
+                        attention_ratios.append(calc_attention_ratio(electroid_arrays))
+                    attention_ratio = generate_attention_ratio(attention_ratios)
+                    zero_one_scale = 0.5
+                    focus_scale_size = abs(not_focused_ratio - focused_ratio)
+                    if not_focused_ratio>focused_ratio:
+                        zero_one_scale = max(min(1, (attention_ratio-focused_ratio)/focus_scale_size),0)
 
-            # list of 5 arrays based on coloum
-            electroid_arrays = get_electroid_arrays(sample_matrix)
+                    else:
+                        zero_one_scale = 1 - max(min(1,(attention_ratio-not_focused_ratio)/focus_scale_size),0)
+
+                    attention_score = (zero_one_scale-0.5)*2
+                    BrainData().update(ProcessedSampleData(attention_score))
+                    print("normal attention score is "+attention_score)
 
 
-            attention_ratios = []
-            for i in range(len(electroid_arrays)):
-                attention_ratios.append(calc_attention_ratio(electroid_arrays))
-            print(attention_ratios)
-            with open("output.txt", "a") as file:
-                file.write(f"\n{attention_ratios}")
 
     except:
         pass
 
-    # geneate attention score that will be sent through api
-    attention_score = generate_attention_score(attention_ratios)
     inlet.close_stream()
     Runner().kill_server()
 
