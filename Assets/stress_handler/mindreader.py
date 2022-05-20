@@ -46,6 +46,13 @@ def calc_attention_ratio(electroid_arrays):
     return attention_ratio
 
 
+def bandpower(x, fs, fmin, fmax):
+    f, Pxx = signal.periodogram(x, fs=fs)
+    ind_min = scipy.argmax(f > fmin) - 1
+    ind_max = scipy.argmax(f > fmax) - 1
+    return scipy.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
+
+
 def calc_attention_ratio_array(sample_array):
     np_matrix = np.array(sample_array)
     sos = signal.butter(1, 40, 'hp', fs=256, output='sos')
