@@ -21,6 +21,8 @@ class BrainData:
     def update(self, sample: ProcessedSampleData):
         if self.last_update_time is None:
             delta = 1 # sec
+        elif sample.sample_time < self.last_update_time:
+            return
         else:
             delta = (sample.sample_time - self.last_update_time).seconds
 
