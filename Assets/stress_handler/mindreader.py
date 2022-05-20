@@ -25,8 +25,14 @@ def get_sample(inlet):
     return sample
 
 
-def  get_electroid_arrays(sample_matrix):
-    return [[],[],[],[],[]]
+def get_electroid_arrays(sample_matrix):
+    l = []
+    for i in range(5):
+        subl = []
+        for m in sample_matrix:
+            subl.append(m[i])
+        l.append(subl)
+    return l
 
 def calc_attention_ratio(electroid_arrays):
     return 0
