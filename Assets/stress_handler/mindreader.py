@@ -2,12 +2,13 @@ import time
 
 from pylsl import StreamInlet, resolve_stream
 from multiprocessing import Process
+import multiprocessing
 from pylsl import *
 import numpy as np
-from data_server import Runner
 from brain_data import *
 from scipy import signal
 import scipy
+import _thread
 
 def disconnect_all_muses():
     streams = resolve_stream('type', 'EEG')
@@ -68,13 +69,13 @@ def calc_attention_ratio_array(sample_array):
     beta = bandpower(filtered, 256, 12, 30)
     return beta / max(theta,0.0000001)
 
-# side electords 0.1, main electrods 0.4
-def generate_attention_score(attention_ratios):
-    return attention_ratios[0]*0.1+attention_ratios[1]*0.4+attention_ratios[2]*0.4+attention_ratios[3]*0.1
+
+def generate_attention_ratio(attention_ratios):
+    return attention_ratios[0]*0.1+attention_ratios[1]*.4+attention_ratios[2]*0.4+attention_ratios[3]*0.1
 
 
-def main():
-    Runner().run()
+
+def run_reader():
     #mac_address = "00:55:da:b3:d2:69"
     mac_address = "00:55:DA:B9:49:FF".lower()
     inlet = connect_muse(mac_address)
@@ -82,55 +83,52 @@ def main():
     focused_ratio = -1000
     not_focused_ratio = -1000
     start_time = datetime.now()
-    # calculate focused_ratio and not focused_ratio
+    not_focused_ratio = -1000
+    focused_ratio = -1000
 
-    # for each electroid calculate attention ratio (beta/theta)
-    
     try:
         while True:
             sample_matrix = []
             attention_score = 0.5
-            if focused_ratio<0 or not_focused_ratio<0:
+            if focused_ratio < 0 or not_focused_ratio < 0:
                 # gathering data for sampling
-                sample_matrix.append(get_sample(inlet))
+                for _ in range(256):
+                    sample_matrix.append(get_sample(inlet))
                 # calulcate focused
                 if (datetime.now()-start_time).seconds<10 and focused_ratio<0:
                     electroid_arrays = get_electroid_arrays(sample_matrix)
                     attention_ratios = []
-                    for i in range(len(electroid_arrays)):
-                        attention_ratios.append(calc_attention_ratio(electroid_arrays))
+                    attention_ratios = calc_attention_ratio(electroid_arrays)
                     focused_ratio = generate_attention_ratio(attention_ratios)
-                    print("focused ratio is"+ focused_ratio)
                 # calculate unfocused
                 elif (datetime.now()-start_time).seconds<20:
                     electroid_arrays = get_electroid_arrays(sample_matrix)
-                    attention_ratios = []
-                    for i in range(len(electroid_arrays)):
-                        attention_ratios.append(calc_attention_ratio(electroid_arrays))
+                    attention_ratios = calc_attention_ratio(electroid_arrays)
                     not_focused_ratio = generate_attention_ratio(attention_ratios)
-                    print("not focused ratio is" + focused_ratio)
             # focused/unfocused calculated
             else:
                 # gather samples for 1 second
                 gather_time = datetime.now()
-                while (datetime.now() - gather_time).seconds < 1:
+                for _ in range(256):
                     sample_matrix.append(get_sample(inlet))
-                    electroid_arrays = get_electroid_arrays(sample_matrix)
-                    attention_ratios = []
-                    for i in range(len(electroid_arrays)):
-                        attention_ratios.append(calc_attention_ratio(electroid_arrays))
-                    attention_ratio = generate_attention_ratio(attention_ratios)
-                    zero_one_scale = 0.5
-                    focus_scale_size = abs(not_focused_ratio - focused_ratio)
-                    if not_focused_ratio>focused_ratio:
-                        zero_one_scale = max(min(1, (attention_ratio-focused_ratio)/focus_scale_size),0)
+                electroid_arrays = get_electroid_arrays(sample_matrix)
+                attention_ratios = calc_attention_ratio(electroid_arrays)
+                attention_ratio = generate_attention_ratio(attention_ratios)
+                zero_one_scale = 0.5
+                focus_scale_size = abs(not_focused_ratio - focused_ratio)
+                if not_focused_ratio>focused_ratio:
+                    zero_one_scale = max(min(1, (attention_ratio-focused_ratio)/focus_scale_size),0)
+                else:
+                    zero_one_scale = 1 - max(min(1,(attention_ratio-not_focused_ratio)/focus_scale_size),0)
+
+                attention_score = ((zero_one_scale-0.5)*2) / 100.0
+                BrainData().update(ProcessedSampleData(attention_score))
+
+
 
     except:
         pass
 
     inlet.close_stream()
-    Runner().kill_server()
 
 
-if __name__ == '__main__':
-    main()

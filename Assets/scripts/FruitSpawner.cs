@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CharacterSpawner : MonoBehaviour
+public class FruitSpawner : MonoBehaviour
 {
     [SerializeField] GameObject[] fruits;
     float time;
-    [SerializeField] float summon_time = 2f;
+    [SerializeField] float summon_rate = 2f;
     private Env global_env;
 
     void Start()
@@ -18,7 +18,7 @@ public class CharacterSpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Time.realtimeSinceStartup - time > summon_time){
+        if (Time.realtimeSinceStartup - time > (1/summon_rate) * 100){
             time = Time.realtimeSinceStartup;
             foreach (GameObject fruit in fruits){               
                 Vector3 spawnPos =  new Vector3 (0, -global_env.cameraHeight , global_env.cameraOffset);

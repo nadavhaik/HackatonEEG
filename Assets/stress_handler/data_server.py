@@ -2,10 +2,10 @@ from datetime import timezone, datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import logging
 import json
-
+from threading import Thread
 from brain_data import BrainData, ProcessedSampleData
 from singleton import singleton
-
+from mindreader import run_reader
 PORT = 9400
 
 
@@ -33,6 +33,7 @@ class DataServer(BaseHTTPRequestHandler):
             self.send_error(404, "Not supported")
 
     def do_POST(self):
+
         content_length = int(self.headers['Content-Length'])
         post_data = json.loads(self.rfile.read(content_length))
         if self.path == "/post/setgauge":
@@ -64,3 +65,9 @@ class Runner:
 
     def kill_server(self):
         self.httpd.server_close()
+
+if __name__ == "__main__":
+    t = Thread(target=run_reader)
+    t.start()
+    Runner().run()
+    t.join()
